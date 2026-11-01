@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use markdown::Options;
+
 use crate::{
     error::Error,
     lexer::{Location, Token, TokenKind},
@@ -260,7 +262,8 @@ impl Parser {
             }),
             "exp" => Ok(Command::Expand { location: start }),
             "md" => Ok(Command::Markdown {
-                html: markdown::to_html(&self.expect_string()?),
+                html: markdown::to_html_with_options(&self.expect_string()?, &Options::gfm())
+                    .map_err(|_| Error::new(start.clone(), "error parsing markdown string"))?,
                 location: start,
             }),
             _ => Err(Error::new(
