@@ -63,7 +63,7 @@ pub enum Command {
         location: Location,
     },
     Markdown {
-        text: String,
+        html: String,
         location: Location,
     },
 }

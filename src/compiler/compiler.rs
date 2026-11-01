@@ -204,9 +204,12 @@ impl Compiler {
                     ));
                 }
             }
-            Command::Markdown { text, location } => {
+            Command::Markdown {
+                html: text,
+                location,
+            } => {
                 if let Some(p) = self.page_collection.get_page_mut(page) {
-                    p.write(&markdown::to_html(&text));
+                    p.write(&text);
                 }
             }
             Command::Expand { location } => {

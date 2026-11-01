@@ -260,7 +260,7 @@ impl Parser {
             }),
             "exp" => Ok(Command::Expand { location: start }),
             "md" => Ok(Command::Markdown {
-                text: self.expect_string()?,
+                html: markdown::to_html(&self.expect_string()?),
                 location: start,
             }),
             _ => Err(Error::new(
