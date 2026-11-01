@@ -1,6 +1,18 @@
 use std::{fs, path::PathBuf, str::FromStr};
 
-use clap::{Command, command};
+use axum::{
+    Router,
+    extract::{
+        State,
+        ws::{Message, WebSocketUpgrade},
+    },
+    response::IntoResponse,
+    routing::get,
+};
+use clap::{Command, arg, command, value_parser};
+use notify::{RecursiveMode, Watcher};
+use tokio::sync::broadcast;
+use tower_http::services::ServeDir;
 
 use insite::{
     compiler::{BuildConfig, Compiler},
@@ -8,7 +20,8 @@ use insite::{
     parser::Parser,
 };
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let filename = PathBuf::from_str("index.site").unwrap();
 
     // check for existing files first
@@ -26,10 +39,23 @@ fn main() {
 
     let matches = command!()
         .subcommand(Command::new("build").about("compile and build a site"))
+        .subcommand(
+            Command::new("dev")
+                .about("start a live reloading web server")
+                .arg(
+                    arg!([path] "the directory to serve from")
+                        .required(true)
+                        .value_parser(value_parser!(PathBuf)),
+                ),
+        )
         .get_matches();
 
     if let Some(_) = matches.subcommand_matches("build") {
-        build(&filename, &config_file);
+        build(&filename, &config_file, false);
+    } else if let Some(m) = matches.subcommand_matches("dev") {
+        if let Some(path) = m.get_one::<PathBuf>("path") {
+            dev(&filename, &config_file, path.to_owned()).await;
+        }
     }
 }
 
@@ -37,9 +63,10 @@ fn main() {
 ///
 /// - `filename`: the filename of the file to compile
 /// - `config_file`: the filename of the TOML configuration file
+/// - `dev_mode`: if development mode should be enabled on the compiler
 ///
 /// This function will additionally write encountered errors to standard output.
-fn build(filename: &PathBuf, config_file: &PathBuf) {
+fn build(filename: &PathBuf, config_file: &PathBuf, dev_mode: bool) {
     let contents = fs::read_to_string(&filename).unwrap();
 
     let mut lexer = Lexer::new(&filename, &contents);
@@ -68,7 +95,7 @@ fn build(filename: &PathBuf, config_file: &PathBuf) {
         }
     };
 
-    let mut compiler = Compiler::new();
+    let mut compiler = Compiler::new(dev_mode);
     match compiler.build(config, commands) {
         Ok(()) => {}
         Err(e) => {
@@ -76,4 +103,102 @@ fn build(filename: &PathBuf, config_file: &PathBuf) {
             return;
         }
     };
+}
+
+/// Start a live reloading web server watching for changes on 'index.site' and 'insite.toml' (triggering re-compilations)
+///
+/// - `filename`: the filename of the file to compile
+/// - `config_file`: the filename of the TOML configuration file
+/// - `output_directory`: the output directory to serve from
+async fn dev(filename: &PathBuf, config_file: &PathBuf, output_directory: PathBuf) {
+    let (reload_tx, _) = broadcast::channel::<()>(16);
+
+    let server_tx = reload_tx.clone();
+
+    tokio::spawn(async move {
+        if let Err(e) = start_server(&output_directory, server_tx).await {
+            println!("insite: server error: {e}");
+        }
+    });
+
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+
+    let mut watcher = match notify::recommended_watcher(move |res| {
+        let _ = tx.send(res);
+    }) {
+        Ok(watcher) => watcher,
+        Err(e) => {
+            println!("insite: watcher error: {e}");
+            return;
+        }
+    };
+
+    if let Err(e) = watcher.watch(filename, RecursiveMode::NonRecursive) {
+        println!("insite: {e}");
+        return;
+    }
+
+    if let Err(e) = watcher.watch(config_file, RecursiveMode::NonRecursive) {
+        println!("insite: {e}");
+        return;
+    }
+
+    println!(
+        "insite: watching '{}' and '{}'",
+        filename.display(),
+        config_file.display()
+    );
+
+    // initial compilation
+    build(filename, config_file, true);
+
+    while let Some(res) = rx.recv().await {
+        match res {
+            Ok(event) if event.kind.is_modify() || event.kind.is_create() => {
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
+                build(filename, config_file, true);
+                println!("insite: compiling site");
+
+                let _ = reload_tx.send(());
+                println!("insite: reloading site");
+            }
+            Ok(_) => {}
+            Err(e) => println!("insite: watch error '{e}'"),
+        }
+    }
+}
+
+async fn websocket(
+    ws: WebSocketUpgrade,
+    State(tx): State<broadcast::Sender<()>>,
+) -> impl IntoResponse {
+    ws.on_upgrade(move |mut socket| async move {
+        let mut rx = tx.subscribe();
+
+        while rx.recv().await.is_ok() {
+            if socket.send(Message::Text("reload".into())).await.is_err() {
+                break;
+            }
+        }
+    })
+}
+
+/// Start a webserver at `directory`.
+async fn start_server(
+    directory: &PathBuf,
+    tx: broadcast::Sender<()>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let app = Router::new()
+        .route("/__insite_ws", get(websocket))
+        .fallback_service(ServeDir::new(directory).append_index_html_on_directories(true))
+        .with_state(tx);
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
+
+    println!("insite: serving site at http://127.0.0.1:3000");
+
+    axum::serve(listener, app).await?;
+
+    Ok(())
 }

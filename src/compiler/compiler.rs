@@ -54,14 +54,21 @@ fn output_path(path: &str) -> Option<PathBuf> {
 pub struct Compiler {
     symbols: HashMap<String, Vec<Command>>,
     page_collection: PageCollection,
+    dev_mode: bool,
 }
 
 impl Compiler {
     /// Constructs a new `Compiler` object.
-    pub fn new() -> Self {
+    ///
+    /// - `dev_mode`: enable dev mode
+    ///
+    /// If `dev_mode` is `true`, the compiler will inject reloading scripts into the output HTML,
+    /// otherwise the output is generated as normal.
+    pub fn new(dev_mode: bool) -> Self {
         Self {
             symbols: HashMap::new(),
             page_collection: PageCollection::new(),
+            dev_mode,
         }
     }
 
@@ -74,12 +81,12 @@ impl Compiler {
     ///
     /// This function will `Err` if the any `Command` inside of `commands` was unable to be read correctly.
     pub fn build(&mut self, config: BuildConfig, commands: Vec<Command>) -> Result<(), Error> {
-        if let Err(e) = fs::remove_dir_all(&config.output) {
-            println!("insite: {e}");
+        if let Err(_) = fs::remove_dir_all(&config.output) {
+            println!("insite: unable to clean output directory");
         }
 
-        if let Err(e) = fs::create_dir(&config.output) {
-            println!("insite: {e}");
+        if let Err(_) = fs::create_dir(&config.output) {
+            println!("insite: unable to create output directory");
         }
 
         if let Some(s) = config.style
@@ -107,12 +114,9 @@ impl Compiler {
             let path = config.output.join(relative_path);
 
             if let Some(parent) = path.parent()
-                && let Err(e) = fs::create_dir_all(parent)
+                && let Err(_) = fs::create_dir_all(parent)
             {
-                println!(
-                    "insite: unable to create directory '{}': {e}",
-                    parent.display()
-                );
+                println!("insite: unable to create directory '{}'", parent.display());
                 continue;
             }
 
@@ -231,8 +235,12 @@ impl Compiler {
 
         // html header
         p.write(&format!(
-            r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>{}</title><link rel="stylesheet" href="/style.css"><link rel="icon" href="/favicon.ico" type="image/x-icon"></head><body><main>"#,
-            &name,
+            r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>{}</title><link rel="stylesheet" href="/style.css"><link rel="icon" href="/favicon.ico" type="image/x-icon"></head>{}<body><main>"#,
+            &name, if self.dev_mode {
+                r#"<script>(() => {const socket = new WebSocket(`ws://${location.host}/__insite_ws`); socket.addEventListener("message", (event) => {if (event.data === "reload") {location.reload();}});})();</script>"#
+            } else {
+                ""
+            }
         ));
 
         for child in children {
