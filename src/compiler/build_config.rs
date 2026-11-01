@@ -4,6 +4,7 @@ use std::path::PathBuf;
 pub struct BuildConfig {
     pub output: PathBuf,
     pub style: Option<PathBuf>,
+    pub favicon: Option<PathBuf>,
 }
 
 impl BuildConfig {
@@ -27,6 +28,10 @@ impl BuildConfig {
             config.style = Some(PathBuf::from(style));
         }
 
+        if let Some(favicon) = build.get("favicon").and_then(toml::Value::as_str) {
+            config.favicon = Some(PathBuf::from(favicon))
+        }
+
         Ok(config)
     }
 }
@@ -36,6 +41,7 @@ impl Default for BuildConfig {
         Self {
             output: PathBuf::from("output"),
             style: None,
+            favicon: None,
         }
     }
 }
