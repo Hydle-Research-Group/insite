@@ -52,7 +52,7 @@ impl Display for Error {
         let (line, column) = self.calculate_line_and_column();
 
         let _ = f.write_str(&format!(
-            "insite: {}\n@ {}:{}:{}",
+            "insite: {} @@ {}:{}:{}",
             self.message,
             self.location.filename().to_owned().into_string().unwrap(),
             line,
