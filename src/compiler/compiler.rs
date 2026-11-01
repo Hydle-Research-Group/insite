@@ -39,16 +39,15 @@ fn output_path(path: &str) -> Option<PathBuf> {
         return Some(PathBuf::from("index.html"));
     }
 
-    let mut result = relative;
-    let is_html = result
-        .extension()
-        .is_some_and(|extension| extension == "html");
-
-    if !is_html {
-        result.set_extension("html");
+    // Explicit HTML filenames remain files.
+    if relative.extension().is_some_and(|ext| ext == "html") {
+        return Some(relative);
     }
 
-    Some(result)
+    // All other paths are routes, so produce an index.html.
+    relative.push("index.html");
+
+    Some(relative)
 }
 
 /// An Insite Compiler.
@@ -94,31 +93,25 @@ impl Compiler {
         }
 
         for page in self.page_collection.pages() {
-            let path = config
-                .output
-                .join(if let Some(o) = output_path(page.path()) {
-                    o
-                } else {
-                    println!("insite: skipping unsafe output path '{}'", page.path());
+            let Some(relative_path) = output_path(page.path()) else {
+                println!("insite: skipping unsafe output path '{}'", page.path());
+                continue;
+            };
 
-                    continue;
-                });
+            let path = config.output.join(relative_path);
 
-            if path.ends_with("/") {
-                if let Err(e) = fs::create_dir_all(&path) {
-                    println!("insite: {e}");
-                }
-            } else {
-                if let Err(e) = fs::write(
-                    &path,
-                    if config.pretty {
-                        page.contents().to_owned()
-                    } else {
-                        page.contents().replace("\n", "")
-                    },
-                ) {
-                    println!("insite: {e}");
-                }
+            if let Some(parent) = path.parent()
+                && let Err(e) = fs::create_dir_all(parent)
+            {
+                println!(
+                    "insite: unable to create directory '{}': {e}",
+                    parent.display()
+                );
+                continue;
+            }
+
+            if let Err(_) = fs::write(&path, page.contents()) {
+                println!("insite: unable to write '{}'", path.display());
             }
         }
 
@@ -232,16 +225,7 @@ impl Compiler {
 
         // html header
         p.write(&format!(
-            r#"<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="X-UA-Compatible" content="ie=edge">
-<title>{}</title>
-<link rel="stylesheet" href="style.css">
-<link rel="icon" href="./{}.ico" type="image/x-icon">
-</head>
-<body>
-<main>"#,
+            r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>{}</title><link rel="stylesheet" href="style.css"><link rel="icon" href="./{}.ico" type="image/x-icon"></head><body><main>"#,
             &name, &name
         ));
 
@@ -250,7 +234,7 @@ impl Compiler {
         }
 
         let p = self.page_collection.get_page_mut(&id).unwrap();
-        p.write("</main>\n</body>\n</html>");
+        p.write("</main></body></html>");
 
         Ok(())
     }

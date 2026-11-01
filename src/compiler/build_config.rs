@@ -4,7 +4,6 @@ use std::path::PathBuf;
 pub struct BuildConfig {
     pub output: PathBuf,
     pub style: Option<PathBuf>,
-    pub pretty: bool,
 }
 
 impl BuildConfig {
@@ -28,10 +27,6 @@ impl BuildConfig {
             config.style = Some(PathBuf::from(style));
         }
 
-        if let Some(pretty) = build.get("pretty").and_then(toml::Value::as_bool) {
-            config.pretty = pretty;
-        }
-
         Ok(config)
     }
 }
@@ -41,7 +36,6 @@ impl Default for BuildConfig {
         Self {
             output: PathBuf::from("output"),
             style: None,
-            pretty: false,
         }
     }
 }
