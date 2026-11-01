@@ -83,6 +83,12 @@ impl Compiler {
             println!("insite: {e}");
         }
 
+        if let Some(s) = config.style
+            && let Err(_) = fs::copy(&s, &config.output.join("style.css"))
+        {
+            println!("insite: unable to link stylesheet '{}'", s.display());
+        }
+
         for command in commands {
             self.execute_command(command, &PageID(0))?;
         }
@@ -231,6 +237,7 @@ impl Compiler {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
 <title>{}</title>
+<link rel="stylesheet" href="style.css">
 <link rel="icon" href="./{}.ico" type="image/x-icon">
 </head>
 <body>
