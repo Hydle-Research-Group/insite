@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use markdown::Options;
+use markdown::{CompileOptions, Options};
 
 use crate::{
     error::Error,
@@ -261,11 +261,22 @@ impl Parser {
                 location: start,
             }),
             "exp" => Ok(Command::Expand { location: start }),
-            "md" => Ok(Command::Markdown {
-                html: markdown::to_html_with_options(&self.expect_string()?, &Options::gfm())
+            "md" => {
+                let mut compile = CompileOptions::gfm();
+                compile.allow_dangerous_html = true; // enable HTML injection
+
+                Ok(Command::Markdown {
+                    html: markdown::to_html_with_options(
+                        &self.expect_string()?,
+                        &Options {
+                            compile,
+                            ..Default::default()
+                        },
+                    )
                     .map_err(|_| Error::new(start.clone(), "error parsing markdown string"))?,
-                location: start,
-            }),
+                    location: start,
+                })
+            }
             _ => Err(Error::new(
                 start,
                 &format!("expected command, not '{}'", self.peek().kind()),
