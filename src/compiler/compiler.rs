@@ -101,6 +101,12 @@ impl Compiler {
             println!("insite: unable to bundle icon '{}'", s.display());
         }
 
+        for f in config.files {
+            if let Err(_) = fs::copy(&f, &config.output.join(&f.file_name().unwrap())) {
+                println!("insite: unable to bundle resource '{}'", f.display());
+            }
+        }
+
         for command in commands {
             self.execute_command(command, &PageID(0))?;
         }
