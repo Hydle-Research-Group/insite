@@ -244,8 +244,13 @@ impl Compiler {
         children: Vec<Command>,
     ) -> Result<(), Error> {
         let id = self.page_collection.add_page(Page::new(name, path));
-
         let p = self.page_collection.get_page_mut(&id).unwrap();
+
+        let site_name = if self.config.allow_path_appending && !self.dev_mode {
+            format!("/{}", self.config.name)
+        } else {
+            String::new()
+        };
 
         // html header
         let favicon = self
@@ -254,11 +259,11 @@ impl Compiler {
             .as_ref()
             .map_or_else(String::new, |icon| {
                 format!(
-                    r#"<link rel="icon" type="image/x-icon" href="/{}">"#,
+                    r#"<link rel="icon" type="image/x-icon" href="{site_name}/{}">"#,
                     icon.file_name().unwrap().display()
                 )
             });
-
+        let stylesheet = format!(r#"<link rel="stylesheet" href="{site_name}/style.css">"#);
         let dev_script = if self.dev_mode {
             r#"<script>
                 (() => {
@@ -276,7 +281,7 @@ impl Compiler {
         };
 
         p.write(&format!(
-            r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>{name}</title><link rel="stylesheet" href="/style.css">{favicon}</head>{dev_script}<body><main>"#
+            r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>{name}</title>{stylesheet}{favicon}</head>{dev_script}<body><main>"#
         ));
 
         for child in children {

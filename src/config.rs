@@ -5,12 +5,14 @@ use toml::Value;
 /// A build configuration.
 #[derive(Debug, Clone)]
 pub struct BuildConfig {
+    pub name: String,
     pub output: PathBuf,
     pub purge: bool,
     pub favicon: Option<PathBuf>,
     pub stylesheet: Option<PathBuf>,
     pub assets: Vec<PathBuf>,
     pub allow_markdown_html: bool,
+    pub allow_path_appending: bool,
     pub allow_gfm: bool,
 }
 
@@ -28,9 +30,18 @@ impl BuildConfig {
         let mut config = Self::default();
 
         if let Some(build) = value.get("build") {
+            if let Some(name) = build.get("name").and_then(Value::as_str) {
+                config.name = name.to_string();
+            } else {
+                println!(
+                    "warning: not specifying `build.name` in your 'insite.toml' may result in broken assets"
+                );
+            }
+
             if let Some(output) = build.get("output").and_then(Value::as_str) {
                 config.output = PathBuf::from(output);
             }
+
             if let Some(purge) = build.get("purge").and_then(Value::as_bool) {
                 config.purge = purge;
             }
@@ -69,10 +80,18 @@ impl BuildConfig {
             if let Some(allow_markdown_html) =
                 compiler.get("allow-markdown-html").and_then(Value::as_bool)
             {
-                config.allow_markdown_html = allow_markdown_html
+                config.allow_markdown_html = allow_markdown_html;
             }
+
+            if let Some(allow_path_appending) = compiler
+                .get("allow-path-appending")
+                .and_then(Value::as_bool)
+            {
+                config.allow_path_appending = allow_path_appending;
+            }
+
             if let Some(allow_gfm) = compiler.get("allow-gfm").and_then(Value::as_bool) {
-                config.allow_gfm = allow_gfm
+                config.allow_gfm = allow_gfm;
             }
         }
 
@@ -83,12 +102,14 @@ impl BuildConfig {
 impl Default for BuildConfig {
     fn default() -> Self {
         Self {
+            name: String::new(),
             output: PathBuf::from("output"),
             purge: true,
             favicon: None,
             stylesheet: None,
             assets: Vec::new(),
             allow_markdown_html: false,
+            allow_path_appending: false,
             allow_gfm: true,
         }
     }
