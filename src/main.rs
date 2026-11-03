@@ -51,7 +51,7 @@ async fn main() {
     {
         println!("{e}");
     } else if let Some(_) = matches.subcommand_matches("dev")
-        && let Err(e) = dev(&filename, &config).await
+        && let Err(e) = dev(&filename, &config_file, &config).await
     {
         println!("{e}");
     }
@@ -79,12 +79,13 @@ fn build(filename: &PathBuf, config: &BuildConfig, dev_mode: bool) -> Result<(),
     Ok(())
 }
 
-/// Start a live reloading web server watching for changes on 'index.site' and 'insite.toml' (triggering re-compilations)
+/// Start a live reloading web server and watch for changes on 'index.site' and 'insite.toml' data
+/// (triggering re-compilations)
 ///
 /// - `filename`: the filename of the file to compile
 /// - `config_file`: the filename of the TOML configuration file
-/// - `output_directory`: the output directory to serve from
-async fn dev(filename: &PathBuf, config: &BuildConfig) -> Result<(), Error> {
+/// - `config`: the build configuration
+async fn dev(filename: &PathBuf, config_file: &PathBuf, config: &BuildConfig) -> Result<(), Error> {
     let (reload_tx, _) = broadcast::channel::<()>(16);
 
     let server_tx = reload_tx.clone();
@@ -107,7 +108,7 @@ async fn dev(filename: &PathBuf, config: &BuildConfig) -> Result<(), Error> {
         .watch(filename, RecursiveMode::NonRecursive)
         .map_err(|e| Error::General(e.to_string()))?;
     watcher
-        .watch(&PathBuf::from("insite.toml"), RecursiveMode::NonRecursive)
+        .watch(config_file, RecursiveMode::NonRecursive)
         .map_err(|e| Error::General(e.to_string()))?;
 
     if let Some(s) = &config.stylesheet {
@@ -128,15 +129,16 @@ async fn dev(filename: &PathBuf, config: &BuildConfig) -> Result<(), Error> {
             Ok(event) if event.kind.is_modify() || event.kind.is_create() => {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
-                // TODO: re-parse config file
+                // re-parse the build config
+                let config = BuildConfig::from_toml(&fs::read_to_string(config_file)?)?;
+
+                println!("insite: compiling site");
                 if let Err(e) = build(filename, &config, true) {
                     println!("{e}");
                 };
 
-                println!("insite: compiling site");
-
-                let _ = reload_tx.send(());
                 println!("insite: reloading site");
+                let _ = reload_tx.send(());
             }
             Ok(_) => {}
             Err(e) => println!("insite: watch error '{e}'"),
