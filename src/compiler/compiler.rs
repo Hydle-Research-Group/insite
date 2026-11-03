@@ -95,12 +95,6 @@ impl Compiler {
             println!("insite: unable to bundle stylesheet '{}'", s.display());
         }
 
-        if let Some(s) = config.favicon
-            && let Err(_) = fs::copy(&s, &config.output.join("favicon.ico"))
-        {
-            println!("insite: unable to bundle icon '{}'", s.display());
-        }
-
         for f in config.files {
             if let Err(_) = fs::copy(&f, &config.output.join(&f.file_name().unwrap())) {
                 println!("insite: unable to bundle resource '{}'", f.display());
@@ -244,7 +238,7 @@ impl Compiler {
 
         // html header
         p.write(&format!(
-            r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>{}</title><link rel="stylesheet" href="/style.css"><link rel="icon" href="/favicon.ico" type="image/x-icon"></head>{}<body><main>"#,
+            r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>{}</title><link rel="stylesheet" href="/style.css"></head>{}<body><main>"#,
             &name, if self.dev_mode {
                 r#"<script>(() => {const socket = new WebSocket(`ws://${location.host}/__insite_ws`); socket.addEventListener("message", (event) => {if (event.data === "reload") {location.reload();}});})();</script>"#
             } else {

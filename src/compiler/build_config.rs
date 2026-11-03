@@ -26,7 +26,6 @@ impl Display for ConfigError {
 pub struct BuildConfig {
     pub output: PathBuf,
     pub style: Option<PathBuf>,
-    pub favicon: Option<PathBuf>,
     pub files: Vec<PathBuf>,
 }
 
@@ -49,10 +48,6 @@ impl BuildConfig {
 
         if let Some(style) = build.get("style").and_then(Value::as_str) {
             config.style = Some(PathBuf::from(style));
-        }
-
-        if let Some(favicon) = build.get("favicon").and_then(Value::as_str) {
-            config.favicon = Some(PathBuf::from(favicon))
         }
 
         let Some(resources) = value.get("resources") else {
@@ -87,7 +82,6 @@ impl Default for BuildConfig {
         Self {
             output: PathBuf::from("output"),
             style: None,
-            favicon: None,
             files: Vec::new(),
         }
     }
