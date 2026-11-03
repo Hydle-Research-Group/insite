@@ -110,6 +110,12 @@ async fn dev(filename: &PathBuf, config: &BuildConfig) -> Result<(), Error> {
         .watch(&PathBuf::from("insite.toml"), RecursiveMode::NonRecursive)
         .map_err(|e| Error::General(e.to_string()))?;
 
+    if let Some(s) = &config.stylesheet {
+        watcher
+            .watch(&s, RecursiveMode::NonRecursive)
+            .map_err(|e| Error::General(e.to_string()))?;
+    }
+
     println!("insite: watching '{}'", filename.display());
 
     // initial compilation
