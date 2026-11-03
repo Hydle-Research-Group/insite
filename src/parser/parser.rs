@@ -3,26 +3,41 @@ use std::path::PathBuf;
 use markdown::{CompileOptions, Options};
 
 use crate::{
+    config::BuildConfig,
     error::{Error, LanguageError},
     lexer::{Location, Token, TokenKind},
     parser::{Alignment, Command, Layout},
 };
 
+/// An Insite parser.
 pub struct Parser {
     filename: PathBuf,
+    config: BuildConfig,
     tokens: Vec<Token>,
     index: usize,
 }
 
 impl Parser {
-    pub fn new(filename: &PathBuf, tokens: &[Token]) -> Self {
+    /// Constructs a new `Parser` object.
+    ///
+    /// - `filename`: the name of the parsed file
+    /// - `config`: the build configuration
+    /// - `tokens`: the token stream to parse
+    pub fn new(filename: &PathBuf, config: &BuildConfig, tokens: &[Token]) -> Self {
         Self {
             filename: filename.to_owned(),
+            config: config.to_owned(),
             tokens: tokens.to_vec(),
             index: 0,
         }
     }
 
+    /// Parse the parser's tokens into a `Vec` of `Command` objects.
+    ///
+    /// # Errors
+    ///
+    /// This function will `Err` if the file couldn't be parsed properly (due to syntax
+    /// errors or related issues.)
     pub fn parse(&mut self) -> Result<Vec<Command>, Error> {
         let mut commands = Vec::new();
 
@@ -262,8 +277,12 @@ impl Parser {
             }),
             "exp" => Ok(Command::Expand { location: start }),
             "md" => {
-                let mut compile = CompileOptions::gfm();
-                compile.allow_dangerous_html = true; // enable HTML injection
+                let mut compile = if self.config.allow_gfm {
+                    CompileOptions::gfm()
+                } else {
+                    CompileOptions::default()
+                };
+                compile.allow_dangerous_html = self.config.allow_markdown_html; // enable HTML injection
 
                 Ok(Command::Markdown {
                     html: markdown::to_html_with_options(
