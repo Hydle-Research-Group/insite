@@ -84,20 +84,18 @@ impl Compiler {
     ///
     /// This function will `Err` if the any `Command` inside of `commands` was unable to be read correctly.
     pub fn build(&mut self, commands: Vec<Command>) -> Result<(), Error> {
-        if self.config.purge {
+        if self.config.purge && self.config.output.exists() {
             // clear the output directory
             fs::remove_dir_all(&self.config.output)?;
         }
 
-        if !self.config.output.exists() {
-            // create the output directory
-            fs::create_dir(&self.config.output)?;
-        }
+        // create the output directory
+        fs::create_dir(&self.config.output)?;
 
         if let Some(s) = &self.config.stylesheet
             && let Err(_) = fs::copy(&s, &self.config.output.join("style.css"))
         {
-            println!("insite: unable to bundle stylesheet");
+            println!("insite: unable to bundle stylesheet '{}'", s.display());
         }
 
         if let Some(f) = &self.config.favicon
