@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use crate::{
-    error::Error,
+    error::{Error, LanguageError},
     lexer::{Location, Token, TokenKind},
 };
 
@@ -97,10 +97,10 @@ impl Lexer {
                     self.skip_comment();
                 }
                 _ => {
-                    return Err(Error::new(
+                    return Err(Error::Language(LanguageError::new(
                         Location::new(start, start + 1, &self.filename),
                         "unknown character",
-                    ));
+                    )));
                 }
             }
         }
@@ -198,10 +198,10 @@ impl Lexer {
                     string.push(*replacement);
                     self.advance();
                 } else {
-                    return Err(Error::new(
+                    return Err(Error::Language(LanguageError::new(
                         Location::new(pos_start, self.index, &self.filename),
                         "invalid escape character",
-                    ));
+                    )));
                 }
 
                 escape_char = false;
@@ -219,10 +219,10 @@ impl Lexer {
         }
 
         if self.current_char != Some('"') {
-            return Err(Error::new(
+            return Err(Error::Language(LanguageError::new(
                 Location::new(pos_start, self.index, &self.filename),
                 "string not terminated",
-            ));
+            )));
         }
 
         self.advance();

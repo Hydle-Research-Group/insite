@@ -16,6 +16,7 @@ use tower_http::services::ServeDir;
 
 use insite::{
     compiler::{BuildConfig, Compiler},
+    error::Error,
     lexer::Lexer,
     parser::Parser,
 };
@@ -50,11 +51,15 @@ async fn main() {
         )
         .get_matches();
 
-    if let Some(_) = matches.subcommand_matches("build") {
-        build(&filename, &config_file, false);
+    if let Some(_) = matches.subcommand_matches("build")
+        && let Err(e) = build(&filename, &config_file, false)
+    {
+        println!("{e}");
     } else if let Some(m) = matches.subcommand_matches("dev") {
-        if let Some(path) = m.get_one::<PathBuf>("path") {
-            dev(&filename, &config_file, path.to_owned()).await;
+        if let Some(path) = m.get_one::<PathBuf>("path")
+            && let Err(e) = dev(&filename, &config_file, path.to_owned()).await
+        {
+            println!("{e}");
         }
     }
 }
@@ -66,43 +71,21 @@ async fn main() {
 /// - `dev_mode`: if development mode should be enabled on the compiler
 ///
 /// This function will additionally write encountered errors to standard output.
-fn build(filename: &PathBuf, config_file: &PathBuf, dev_mode: bool) {
+fn build(filename: &PathBuf, config_file: &PathBuf, dev_mode: bool) -> Result<(), Error> {
     let contents = fs::read_to_string(&filename).unwrap();
 
     let mut lexer = Lexer::new(&filename, &contents);
-    let tokens = match lexer.run() {
-        Ok(t) => t,
-        Err(e) => {
-            println!("{e}");
-            return;
-        }
-    };
+    let tokens = lexer.run()?;
 
     let mut parser = Parser::new(&filename, &tokens);
-    let commands = match parser.parse() {
-        Ok(c) => c,
-        Err(e) => {
-            println!("{e}");
-            return;
-        }
-    };
+    let commands = parser.parse()?;
 
-    let config = match BuildConfig::from_toml(&fs::read_to_string(&config_file).unwrap()) {
-        Ok(b) => b,
-        Err(e) => {
-            println!("insite: error parsing '{}'\n{e}", config_file.display());
-            return;
-        }
-    };
+    let config = BuildConfig::from_toml(&fs::read_to_string(&config_file).unwrap())?;
 
     let mut compiler = Compiler::new(dev_mode);
-    match compiler.build(config, commands) {
-        Ok(()) => {}
-        Err(e) => {
-            println!("{e}");
-            return;
-        }
-    };
+    compiler.build(config, commands)?;
+
+    Ok(())
 }
 
 /// Start a live reloading web server watching for changes on 'index.site' and 'insite.toml' (triggering re-compilations)
@@ -110,38 +93,34 @@ fn build(filename: &PathBuf, config_file: &PathBuf, dev_mode: bool) {
 /// - `filename`: the filename of the file to compile
 /// - `config_file`: the filename of the TOML configuration file
 /// - `output_directory`: the output directory to serve from
-async fn dev(filename: &PathBuf, config_file: &PathBuf, output_directory: PathBuf) {
+async fn dev(
+    filename: &PathBuf,
+    config_file: &PathBuf,
+    output_directory: PathBuf,
+) -> Result<(), Error> {
     let (reload_tx, _) = broadcast::channel::<()>(16);
 
     let server_tx = reload_tx.clone();
 
     tokio::spawn(async move {
         if let Err(e) = start_server(&output_directory, server_tx).await {
-            println!("insite: server error: {e}");
+            println!("insite: server error\n{e}");
         }
     });
 
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
 
-    let mut watcher = match notify::recommended_watcher(move |res| {
+    let mut watcher = notify::recommended_watcher(move |res| {
         let _ = tx.send(res);
-    }) {
-        Ok(watcher) => watcher,
-        Err(e) => {
-            println!("insite: watcher error: {e}");
-            return;
-        }
-    };
+    })
+    .map_err(|e| Error::General(e.to_string()))?;
 
-    if let Err(e) = watcher.watch(filename, RecursiveMode::NonRecursive) {
-        println!("insite: {e}");
-        return;
-    }
-
-    if let Err(e) = watcher.watch(config_file, RecursiveMode::NonRecursive) {
-        println!("insite: {e}");
-        return;
-    }
+    watcher
+        .watch(filename, RecursiveMode::NonRecursive)
+        .map_err(|e| Error::General(e.to_string()))?;
+    watcher
+        .watch(config_file, RecursiveMode::NonRecursive)
+        .map_err(|e| Error::General(e.to_string()))?;
 
     println!(
         "insite: watching '{}' and '{}'",
@@ -150,14 +129,19 @@ async fn dev(filename: &PathBuf, config_file: &PathBuf, output_directory: PathBu
     );
 
     // initial compilation
-    build(filename, config_file, true);
+    if let Err(e) = build(filename, config_file, true) {
+        println!("{e}");
+    };
 
     while let Some(res) = rx.recv().await {
         match res {
             Ok(event) if event.kind.is_modify() || event.kind.is_create() => {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
-                build(filename, config_file, true);
+                if let Err(e) = build(filename, config_file, true) {
+                    println!("{e}");
+                };
+
                 println!("insite: compiling site");
 
                 let _ = reload_tx.send(());
@@ -167,6 +151,8 @@ async fn dev(filename: &PathBuf, config_file: &PathBuf, output_directory: PathBu
             Err(e) => println!("insite: watch error '{e}'"),
         }
     }
+
+    Ok(())
 }
 
 async fn websocket(

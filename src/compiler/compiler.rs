@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     compiler::{BuildConfig, Page, PageCollection, PageID},
-    error::Error,
+    error::{Error, LanguageError},
     parser::{Alignment, Command, Layout},
 };
 
@@ -81,23 +81,21 @@ impl Compiler {
     ///
     /// This function will `Err` if the any `Command` inside of `commands` was unable to be read correctly.
     pub fn build(&mut self, config: BuildConfig, commands: Vec<Command>) -> Result<(), Error> {
-        if let Err(_) = fs::remove_dir_all(&config.output) {
-            println!("insite: unable to clean output directory");
-        }
+        // clear the output directory
+        fs::remove_dir_all(&config.output)?;
 
-        if let Err(_) = fs::create_dir(&config.output) {
-            println!("insite: unable to create output directory");
-        }
+        // create the output directory
+        fs::create_dir(&config.output)?;
 
         if let Some(s) = config.style
             && let Err(_) = fs::copy(&s, &config.output.join("style.css"))
         {
-            println!("insite: unable to bundle stylesheet '{}'", s.display());
+            println!("insite: unable to bundle stylesheet");
         }
 
         for f in config.files {
             if let Err(_) = fs::copy(&f, &config.output.join(&f.file_name().unwrap())) {
-                println!("insite: unable to bundle resource '{}'", f.display());
+                println!("insite: unable to bundle asset '{}'", f.display());
             }
         }
 
@@ -198,10 +196,10 @@ impl Compiler {
                         self.execute_command(command.to_owned(), page)?;
                     }
                 } else {
-                    return Err(Error::new(
+                    return Err(Error::Language(LanguageError::new(
                         location,
                         &format!("no section defined for '{}'", &section),
-                    ));
+                    )));
                 }
             }
             Command::Markdown {

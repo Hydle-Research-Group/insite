@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use markdown::{CompileOptions, Options};
 
 use crate::{
-    error::Error,
+    error::{Error, LanguageError},
     lexer::{Location, Token, TokenKind},
     parser::{Alignment, Command, Layout},
 };
@@ -79,10 +79,10 @@ impl Parser {
         let current = self.peek();
 
         if !self.check(kind.clone()) {
-            Err(Error::new(
+            Err(Error::Language(LanguageError::new(
                 current.location().to_owned(),
                 &format!("expected '{}' got '{}'", kind, current.kind()),
-            ))
+            )))
         } else {
             self.advance(); // consume the token
 
@@ -104,10 +104,10 @@ impl Parser {
 
                 Ok(value)
             }
-            _ => Err(Error::new(
+            _ => Err(Error::Language(LanguageError::new(
                 current.location().to_owned(),
                 &format!("expected 'string' got '{}'", current.kind()),
-            )),
+            ))),
         }
     }
 
@@ -125,10 +125,10 @@ impl Parser {
 
                 Ok(value)
             }
-            _ => Err(Error::new(
+            _ => Err(Error::Language(LanguageError::new(
                 current.location().to_owned(),
                 &format!("expected 'keyword' got '{}'", current.kind()),
-            )),
+            ))),
         }
     }
 
@@ -146,10 +146,10 @@ impl Parser {
 
                 Ok(value)
             }
-            _ => Err(Error::new(
+            _ => Err(Error::Language(LanguageError::new(
                 current.location().to_owned(),
                 &format!("expected 'identifier' got '{}'", current.kind()),
-            )),
+            ))),
         }
     }
 
@@ -228,10 +228,10 @@ impl Parser {
                     "horizontal" => Layout::Horizontal,
                     "vertical" => Layout::Vertical,
                     _ => {
-                        return Err(Error::new(
+                        return Err(Error::Language(LanguageError::new(
                             self.peek().location().to_owned(),
                             "expected 'horizontal' or 'vertical' layout",
-                        ));
+                        )));
                     }
                 };
 
@@ -242,10 +242,10 @@ impl Parser {
                     "center" => Alignment::Center,
                     "left" => Alignment::Left,
                     _ => {
-                        return Err(Error::new(
+                        return Err(Error::Language(LanguageError::new(
                             self.peek().location().to_owned(),
                             "expected 'right', 'center', or 'left' alignment",
-                        ));
+                        )));
                     }
                 };
 
@@ -273,14 +273,16 @@ impl Parser {
                             ..Default::default()
                         },
                     )
-                    .map_err(|_| Error::new(start.clone(), "error parsing markdown string"))?,
+                    .map_err(|_| {
+                        LanguageError::new(start.clone(), "error parsing markdown string")
+                    })?,
                     location: start,
                 })
             }
-            _ => Err(Error::new(
+            _ => Err(Error::Language(LanguageError::new(
                 start,
                 &format!("expected command, not '{}'", self.peek().kind()),
-            )),
+            ))),
         }
     }
 }

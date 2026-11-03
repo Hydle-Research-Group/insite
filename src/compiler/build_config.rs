@@ -1,26 +1,6 @@
-use std::{fmt::Display, path::PathBuf};
+use crate::error::Error;
+use std::path::PathBuf;
 use toml::Value;
-
-#[derive(Debug)]
-pub enum ConfigError {
-    Parse(toml::de::Error),
-    InvalidField(String),
-}
-
-impl From<toml::de::Error> for ConfigError {
-    fn from(err: toml::de::Error) -> Self {
-        Self::Parse(err)
-    }
-}
-
-impl Display for ConfigError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ConfigError::Parse(e) => f.write_str(&e.to_string()),
-            ConfigError::InvalidField(e) => f.write_str(e),
-        }
-    }
-}
 
 /// A build configuration.
 pub struct BuildConfig {
@@ -33,7 +13,7 @@ impl BuildConfig {
     /// Construct a `BuildConfig` object from a TOML configuration file.
     ///
     /// - `input`: the TOML contents to parse
-    pub fn from_toml(input: &str) -> Result<Self, ConfigError> {
+    pub fn from_toml(input: &str) -> Result<Self, Error> {
         let value: toml::Value = toml::from_str(input)?;
 
         let Some(build) = value.get("build") else {
@@ -63,7 +43,7 @@ impl BuildConfig {
                         f.push(PathBuf::from(s));
                     }
                     _ => {
-                        return Err(ConfigError::InvalidField(format!(
+                        return Err(Error::General(format!(
                             "resources.files[{i}] must be a string"
                         )));
                     }
