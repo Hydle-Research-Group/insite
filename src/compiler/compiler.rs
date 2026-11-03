@@ -202,12 +202,14 @@ impl Compiler {
                     )));
                 }
             }
-            Command::Markdown {
-                html: text,
-                location,
-            } => {
+            Command::Markdown { html, location } => {
                 if let Some(p) = self.page_collection.get_page_mut(page) {
-                    p.write(&text);
+                    // markdown is treated as a vertically stack section of text
+                    // always put inside a vertical layout
+                    p.write(&format!(
+                        "<div style=\"display: flex; flex-direction: column;\">{}</div>",
+                        html
+                    ));
                 }
             }
             Command::Expand { location } => {
