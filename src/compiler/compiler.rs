@@ -5,7 +5,8 @@ use std::{
 };
 
 use crate::{
-    compiler::{BuildConfig, Page, PageCollection, PageID},
+    compiler::{Page, PageCollection, PageID},
+    config::BuildConfig,
     error::{Error, LanguageError},
     parser::{Alignment, Command, Layout},
 };
@@ -54,47 +55,59 @@ fn output_path(path: &str) -> Option<PathBuf> {
 pub struct Compiler {
     symbols: HashMap<String, Vec<Command>>,
     page_collection: PageCollection,
+    config: BuildConfig,
     dev_mode: bool,
 }
 
 impl Compiler {
     /// Constructs a new `Compiler` object.
     ///
+    /// - `config`: the build configuration
     /// - `dev_mode`: enable dev mode
     ///
     /// If `dev_mode` is `true`, the compiler will inject reloading scripts into the output HTML,
     /// otherwise the output is generated as normal.
-    pub fn new(dev_mode: bool) -> Self {
+    pub fn new(config: &BuildConfig, dev_mode: bool) -> Self {
         Self {
             symbols: HashMap::new(),
             page_collection: PageCollection::new(),
+            config: config.to_owned(),
             dev_mode,
         }
     }
 
     /// Build a web page from the commands.
     ///
-    /// - `config`: the build configuration
     /// - `commands`: the commands to parse and build the site from
     ///
     /// # Errors
     ///
     /// This function will `Err` if the any `Command` inside of `commands` was unable to be read correctly.
-    pub fn build(&mut self, config: BuildConfig, commands: Vec<Command>) -> Result<(), Error> {
-        // clear the output directory
-        fs::remove_dir_all(&config.output)?;
+    pub fn build(&mut self, commands: Vec<Command>) -> Result<(), Error> {
+        if self.config.purge {
+            // clear the output directory
+            fs::remove_dir_all(&self.config.output)?;
+        }
 
-        // create the output directory
-        fs::create_dir(&config.output)?;
+        if !self.config.output.exists() {
+            // create the output directory
+            fs::create_dir(&self.config.output)?;
+        }
 
-        if let Some(s) = config.style
-            && let Err(_) = fs::copy(&s, &config.output.join("style.css"))
+        if let Some(s) = &self.config.stylesheet
+            && let Err(_) = fs::copy(&s, &self.config.output.join("style.css"))
         {
             println!("insite: unable to bundle stylesheet");
         }
 
-        for f in config.files {
-            if let Err(_) = fs::copy(&f, &config.output.join(&f.file_name().unwrap())) {
+        if let Some(f) = &self.config.favicon
+            && let Err(_) = fs::copy(&f, &self.config.output.join(f.file_name().unwrap()))
+        {
+            println!("insite: unable to bundle favicon '{}'", f.display());
+        }
+
+        for f in &self.config.assets {
+            if let Err(_) = fs::copy(&f, &self.config.output.join(&f.file_name().unwrap())) {
                 println!("insite: unable to bundle asset '{}'", f.display());
             }
         }
@@ -109,7 +122,7 @@ impl Compiler {
                 continue;
             };
 
-            let path = config.output.join(relative_path);
+            let path = self.config.output.join(relative_path);
 
             if let Some(parent) = path.parent()
                 && let Err(_) = fs::create_dir_all(parent)
@@ -237,13 +250,35 @@ impl Compiler {
         let p = self.page_collection.get_page_mut(&id).unwrap();
 
         // html header
+        let favicon = self
+            .config
+            .favicon
+            .as_ref()
+            .map_or_else(String::new, |icon| {
+                format!(
+                    r#"<link rel="icon" type="image/x-icon" href="/{}">"#,
+                    icon.file_name().unwrap().display()
+                )
+            });
+
+        let dev_script = if self.dev_mode {
+            r#"<script>
+                (() => {
+                    const socket = new WebSocket(`ws://${location.host}/__insite_ws`);
+
+                    socket.addEventListener("message", (event) => {
+                        if (event.data === "reload") {
+                            location.reload();
+                        }
+                    });
+                })();
+            </script>"#
+        } else {
+            ""
+        };
+
         p.write(&format!(
-            r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>{}</title><link rel="stylesheet" href="/style.css"></head>{}<body><main>"#,
-            &name, if self.dev_mode {
-                r#"<script>(() => {const socket = new WebSocket(`ws://${location.host}/__insite_ws`); socket.addEventListener("message", (event) => {if (event.data === "reload") {location.reload();}});})();</script>"#
-            } else {
-                ""
-            }
+            r#"<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>{name}</title><link rel="stylesheet" href="/style.css">{favicon}</head>{dev_script}<body><main>"#
         ));
 
         for child in children {
