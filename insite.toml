@@ -1,0 +1,10 @@
+[build]
+output = "docs"
+
+[resources]
+favicon = "assets/icon.svg"
+stylesheet = "assets/style.css"
+assets = ["assets/icon.svg"]
+
+[compiler]
+allow-markdown-html = true

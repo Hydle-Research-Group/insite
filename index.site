@@ -1,0 +1,45 @@
+.section nav_bar:
+    ld horizontal, left
+    md "<a href=\"/\"><img src=\"/icon.svg\" width=\"100px\"/></a>"
+    exp
+    md "[Home](/) | [About](/about) | [Documentation](/docs)"
+    str
+
+.page "Home", "/":
+    jmp nav_bar
+    ld horizontal, left
+    ld vertical, left
+    md "## Build static sites <u>quick.</u>"
+    md "Insite is an assembly-like language for building simple websites in minutes, not days."
+    md "<button onclick=\"window.location.href='/docs';\">Get Started</button>"
+    exp
+    str
+    md "
+```
+; reusable components
+.section nav_bar:
+    ld horizontal, left ; ui layout
+    md \"Insite\"
+    exp
+    md \"[Home](/) | [About](/about) | [Documentation](/docs)\" ; first-class markdown support
+    str
+
+; define individual pages and their paths
+.page \"Home\", \"/\":
+    jmp nav_bar
+    md \"# Welcome to Insite!\"
+```"
+    str
+    str
+
+.page "About", "/about":
+    jmp nav_bar
+    ld horizontal, center
+    md "About Page"
+    str
+
+.page "Documentation", "/docs/":
+    jmp nav_bar
+    ld horizontal, center
+    md "Documentation Page"
+    str
