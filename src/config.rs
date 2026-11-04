@@ -12,6 +12,7 @@ pub struct BuildConfig {
     pub stylesheet: Option<PathBuf>,
     pub assets: Vec<PathBuf>,
     pub allow_markdown_html: bool,
+    pub allow_markdown_layout: bool,
     pub allow_path_appending: bool,
     pub allow_gfm: bool,
 }
@@ -83,6 +84,13 @@ impl BuildConfig {
                 config.allow_markdown_html = allow_markdown_html;
             }
 
+            if let Some(allow_markdown_layout) = compiler
+                .get("allow-markdown-layout")
+                .and_then(Value::as_bool)
+            {
+                config.allow_markdown_layout = allow_markdown_layout;
+            }
+
             if let Some(allow_path_appending) = compiler
                 .get("allow-path-appending")
                 .and_then(Value::as_bool)
@@ -109,6 +117,7 @@ impl Default for BuildConfig {
             stylesheet: None,
             assets: Vec::new(),
             allow_markdown_html: false,
+            allow_markdown_layout: false,
             allow_path_appending: false,
             allow_gfm: true,
         }

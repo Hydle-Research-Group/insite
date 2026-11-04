@@ -216,11 +216,15 @@ impl Compiler {
             Command::Markdown { html, location } => {
                 if let Some(p) = self.page_collection.get_page_mut(page) {
                     // markdown is treated as a vertically stack section of text
-                    // always put inside a vertical layout
-                    p.write(&format!(
-                        "<div style=\"display: flex; flex-direction: column;\">{}</div>",
+                    // always put inside a vertical layout unless specified otherwise
+                    p.write(&if self.config.allow_markdown_layout {
                         html
-                    ));
+                    } else {
+                        format!(
+                            "<div style=\"display: flex; flex-direction: column;\">{}</div>",
+                            html
+                        )
+                    });
                 }
             }
             Command::Expand { location } => {
