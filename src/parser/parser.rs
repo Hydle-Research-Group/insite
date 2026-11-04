@@ -42,21 +42,19 @@ impl Parser {
         let mut commands = Vec::new();
 
         while !self.is_at_end() {
-            if self.check(TokenKind::Dot) {
-                self.advance();
+            self.expect(TokenKind::Dot)?;
 
-                if self.check(TokenKind::Keyword {
-                    value: "page".to_string(),
-                }) {
-                    self.advance();
+            let start = self.peek().location().to_owned();
+            let keyword = self.expect_keyword()?;
 
-                    commands.push(self.parse_page()?);
-                } else if self.check(TokenKind::Keyword {
-                    value: "section".to_string(),
-                }) {
-                    self.advance();
-
-                    commands.push(self.parse_section()?);
+            match &*keyword {
+                "page" => commands.push(self.parse_page()?),
+                "section" => commands.push(self.parse_section()?),
+                _ => {
+                    return Err(Error::Language(LanguageError::new(
+                        start,
+                        "expected a 'page' or 'section' definition",
+                    )));
                 }
             }
         }

@@ -38,15 +38,12 @@ impl Lexer {
     /// - `filename`: the name of the lexed file
     /// - `contents`: the contents of the lexed file
     pub fn new(filename: &PathBuf, contents: &str) -> Self {
-        let mut lexer = Self {
-            current_char: None,
+        Self {
+            current_char: contents.chars().nth(0),
             index: 0,
             filename: filename.to_owned(),
-            contents: contents.trim_end().to_owned(),
-        };
-
-        lexer.advance();
-        lexer
+            contents: contents.to_owned(),
+        }
     }
 
     /// Run the lexer.
@@ -117,15 +114,8 @@ impl Lexer {
 
     /// Advances one character forward, incrementing the next index.
     fn advance(&mut self) {
-        let chars = self.contents.chars().collect::<Vec<char>>();
-
-        if (self.index as usize) < chars.len() {
-            self.current_char = Some(chars[self.index]);
-        } else {
-            self.current_char = None;
-        }
-
         self.index += 1;
+        self.current_char = self.contents.chars().nth(self.index);
     }
 
     /// Skips any characters until the next `\n` character.
