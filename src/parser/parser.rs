@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fs, path::PathBuf, thread::panicking};
 
 use markdown::{CompileOptions, Options};
 
@@ -213,6 +213,65 @@ impl Parser {
             location,
         })
     }
+
+    /// Parse a `md` or `mdf` (markdown) command, converting it into HTML.
+    ///
+    /// - `is_file`: if the preceding string is a file path (in this case, `true` for the `mdf` command)
+    ///
+    /// If `is_file` is `true`, the following string is parsed into a `PathBuf`, then read as a file.
+    ///
+    /// # Errors
+    ///
+    /// This function will `Err` if the markdown cannot be parsed, which is unlikely. Additionally,
+    /// the function will `Err` if the markdown file can't be read, or is not valid markdown.
+    fn parse_markdown(&mut self, is_file: bool) -> Result<Command, Error> {
+        let start = self.peek().location().to_owned();
+
+        let md_string = self.expect_string()?;
+        let contents = if is_file {
+            let path = PathBuf::from(&md_string);
+
+            if !path.exists()
+                || !path
+                    .extension()
+                    .is_some_and(|ext| ext.to_ascii_lowercase() == "md")
+            {
+                return Err(Error::Language(LanguageError::new(
+                    start,
+                    "invalid path (file doesn't exist or isn't a valid markdown file)",
+                )));
+            }
+
+            fs::read_to_string(&path).map_err(|e| {
+                Error::Language(LanguageError::new(
+                    start.clone(),
+                    &format!("unable to read file '{e}'"),
+                ))
+            })?
+        } else {
+            md_string
+        };
+
+        let mut compile_options = if self.config.allow_gfm {
+            CompileOptions::gfm()
+        } else {
+            CompileOptions::default()
+        };
+        compile_options.allow_dangerous_html = self.config.allow_markdown_html; // enable HTML injection
+
+        Ok(Command::Markdown {
+            html: markdown::to_html_with_options(
+                &contents,
+                &Options {
+                    compile: compile_options,
+                    ..Default::default()
+                },
+            )
+            .map_err(|_| LanguageError::new(start.clone(), "error parsing markdown string"))?,
+            location: start,
+        })
+    }
+
     /// Parse a group of commands, stopping when the token is an EOF or '.' (indicating a
     /// section or page definition)
     fn parse_commands(&mut self) -> Result<Vec<Command>, Error> {
@@ -276,28 +335,8 @@ impl Parser {
                 location: start,
             }),
             "exp" => Ok(Command::Expand { location: start }),
-            "md" => {
-                let mut compile = if self.config.allow_gfm {
-                    CompileOptions::gfm()
-                } else {
-                    CompileOptions::default()
-                };
-                compile.allow_dangerous_html = self.config.allow_markdown_html; // enable HTML injection
-
-                Ok(Command::Markdown {
-                    html: markdown::to_html_with_options(
-                        &self.expect_string()?,
-                        &Options {
-                            compile,
-                            ..Default::default()
-                        },
-                    )
-                    .map_err(|_| {
-                        LanguageError::new(start.clone(), "error parsing markdown string")
-                    })?,
-                    location: start,
-                })
-            }
+            "md" => Ok(self.parse_markdown(false)?),
+            "mdf" => Ok(self.parse_markdown(true)?),
             _ => Err(Error::Language(LanguageError::new(
                 start,
                 &format!("expected command, not '{}'", self.peek().kind()),

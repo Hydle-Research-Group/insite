@@ -16,6 +16,7 @@ const KEYWORDS: &[&str] = &[
     "jmp",
     "exp",
     "md",
+    "mdf",
     "horizontal",
     "vertical",
     "right",
