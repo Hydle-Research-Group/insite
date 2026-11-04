@@ -1,0 +1,68 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>Creating</title><link rel="stylesheet" href="/insite/style.css"><link rel="icon" type="image/x-icon" href="/insite/icon.svg"></head><body><main><div style="display: flex;flex-direction: row;align-items: flex-start;justify-content: flex-start;width: 100%;box-sizing: border-box;"><div style="display: flex; flex-direction: column;"><p><a href="/insite"><img src="/insite/icon.svg" width="100px"/></a></p></div><div style="flex-grow: 1;"></div><div style="display: flex; flex-direction: column;"><p><a href="/insite">Home</a> | <a href="/insite/docs">Documentation</a></p></div></div><div style="display: flex;flex-direction: row;align-items: flex-start;justify-content: flex-start;width: 100%;box-sizing: border-box;"><div style="display: flex;flex-direction: column;align-items: flex-start;justify-content: flex-start;width: 100%;box-sizing: border-box;"><div style="display: flex; flex-direction: column;"><h4>Contents</h4></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/install">Install</a></p></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/creating">Creating</a></p></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/configuring">Configuring</a></p></div></div><div style="display: flex; flex-direction: column;"><h2>Creating Sites</h2>
+<p>You need to create an <code>index.site</code> and <code>insite.toml</code> file to begin compiling sites. Inside <code>insite.toml</code>, add the following:</p>
+<pre><code class="language-toml">[build]
+output = &quot;my/output/directory/&quot; # path to your output directory
+name = &quot;example_website&quot; # name of your website 
+</code></pre>
+<p>The <code>insite.toml</code> file is configures how the Insite compiler builds a site. More information on configuring your <code>insite.toml</code> can be found <a href="/insite/docs/configuring">here</a>.</p>
+<h3>The Syntax</h3>
+<p>The <code>index.site</code> file is where a site is described, in code. The syntax is much similar to that of the Assembly programming language, where programs are broken down into individual lines.</p>
+<pre><code class="language-asm">; This is a comment
+&quot;This is a string&quot;
+
+; Some commands
+md &quot;Example text&quot;
+jmp my_routine
+</code></pre>
+<h3>Pages</h3>
+<p>An <code>index.site</code> can contain multiple <code>page</code> definitions. <code>page</code> definitions are used for creating individual pages in a website, and are given a name and path.</p>
+<pre><code class="language-asm">.page &quot;This is the title&quot;, &quot;my/page/path&quot;:
+</code></pre>
+<ul>
+<li><code>.page</code>: tells the compiler a page is being defined</li>
+<li><code>&quot;This is the title&quot;</code>: is the title of a page (string)</li>
+<li><code>&quot;my/page/path&quot;</code>: the path of the page</li>
+</ul>
+<p><em>The page path isn't a filename, rather it is the physical URL path of the page. For example, the home page of a site would have a path of just <code>/</code>. To access it, the user would navigate to <code>https://www.mysite.com/</code></em></p>
+<h3>Sections</h3>
+<p>An <code>index.site</code> file can contain multiple <code>section</code> definitions, too. <code>section</code> definitions are re-usable routines that can be referenced via <code>jmp</code> lines.</p>
+<pre><code class="language-asm">.section my_routine:
+    md &quot;This is some text.&quot;
+
+.page &quot;This is the title&quot;, &quot;my/page/path&quot;:
+    jmp my_routine
+</code></pre>
+<ul>
+<li><code>.section</code> tells the compiler a routine is being defined</li>
+<li><code>my_routine</code> is the name of the routing, a variable</li>
+</ul>
+<p>Every time a <code>jmp &lt;routine name&gt;</code> line is seen, the compiler briefly jumps to that routine definition, executing it as if it where apart of the line itself.</p>
+<h3>Using Markdown</h3>
+<p>Insite maintains first-class support for markdown with the <code>md</code> and <code>mdf</code> commands.</p>
+<pre><code class="language-asm">.page &quot;Markdown Page&quot;, &quot;/&quot;:
+    md &quot;# This string can contain any markdown contents!&quot;
+    mdf &quot;path/to/a/markdown/file.md&quot;
+</code></pre>
+<p><code>md</code> and <code>mdf</code> both evaluate during parse time, meaning the compiler only sees the parsed markdown contents. <code>md</code> takes a string of markdown, whilst <code>mdf</code> takes a path to a markdown file. Insite will throw an error if <code>mdf</code> references an invalid markdown file, or the file doesn't exist.</p>
+<h3>Layouts</h3>
+<p>Both sections and pages can contain layout definitions, via the <code>ld</code> and <code>str</code> keywords.</p>
+<pre><code class="language-asm">.page &quot;Example&quot;, &quot;/&quot;:
+    ld vertical, center
+    md &quot;This text is above the last line, and centered horizontally.&quot;
+    md &quot;This text is below the first line, and centered horizontally.&quot;
+    str
+</code></pre>
+<p><code>ld</code> tells the compiler we are loading a layout definition. <code>ld</code> takes two arguments, layout and alignment. Layout can either be <code>vertical</code> or <code>horizontal</code>. Alignment can either be <code>left</code>, <code>center</code>, or <code>right</code>.</p>
+<p><code>str</code> tells the compiler we are storing a layout. Without a <code>str</code> line, the layout propagates all downward lines. <code>str</code> comes after any lines the layout should effect.</p>
+<p><em>If a site layout appears incorrect, make sure every <code>ld</code> call has a <code>str</code> below it's content.</em></p>
+<h3>Expander</h3>
+<p>Layouts can also be stretched or &quot;spread out&quot; with <code>exp</code>.</p>
+<pre><code class="language-asm">.page &quot;Example&quot;, &quot;/&quot;:
+    ld horizontal, center
+    md &quot;This text is all the way to the left.&quot;
+    exp
+    md &quot;This text is all the way to the right.&quot;
+    str
+</code></pre>
+<p><code>exp</code> tells the compiler to expand a layout's area with blank space, stretching across the available width or height.</p>
+</div></div></main></body></html>

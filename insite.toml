@@ -4,7 +4,7 @@ output = "docs"
 
 [resources]
 favicon = "assets/icon.svg"
-stylesheet = "assets/style.css"
+stylesheet = "site/style.css"
 assets = ["assets/icon.svg"]
 
 [compiler]

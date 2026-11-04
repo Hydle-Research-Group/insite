@@ -2,44 +2,47 @@
     ld horizontal, left
     md "<a href=\"/insite\"><img src=\"/insite/icon.svg\" width=\"100px\"/></a>"
     exp
-    md "[Home](/insite) | [About](/insite/about) | [Documentation](/insite/docs)"
+    md "[Home](/insite) | [Documentation](/insite/docs)"
+    str
+
+.section docs_index:
+    ld vertical, left
+    md "#### Contents"
+    md "[Install](/insite/docs/install)"
+    md "[Creating](/insite/docs/creating)"
+    md "[Configuring](/insite/docs/configuring)"
     str
 
 .page "Home", "/":
     jmp nav_bar
-    ld horizontal, left
-    ld vertical, left
-    md "## Build static sites <u>quick.</u>"
-    md "Insite is an assembly-like language for building simple websites in minutes, not days."
-    md "<button onclick=\"window.location.href='/insite/docs';\">Get Started</button>"
-    exp
-    str
-    md "
-```
-; reusable components
-.section nav_bar:
-    ld horizontal, left ; ui layout
-    md \"Insite\"
-    exp
-    md \"[Home](/) | [About](/about) | [Documentation](/docs)\" ; first-class markdown support
-    str
-
-; define individual pages and their paths
-.page \"Home\", \"/\":
-    jmp nav_bar
-    md \"# Welcome to Insite!\"
-```"
-    str
-    str
-
-.page "About", "/about":
-    jmp nav_bar
-    ld horizontal, center
-    md "About Page"
+    ld vertical, center
+    mdf "site/home.md"
     str
 
 .page "Documentation", "/docs/":
     jmp nav_bar
-    ld horizontal, center
-    md "Documentation Page"
+    ld horizontal, left
+    jmp docs_index
+    mdf "site/documentation/docs.md"
+    str
+
+.page "Install", "/docs/install":
+    jmp nav_bar
+    ld horizontal, left
+    jmp docs_index
+    mdf "site/documentation/install.md"
+    str
+
+.page "Creating", "/docs/creating":
+    jmp nav_bar
+    ld horizontal, left
+    jmp docs_index
+    mdf "site/documentation/creating.md"
+    str
+
+.page "Configuring", "/docs/configuring":
+    jmp nav_bar
+    ld horizontal, left
+    jmp docs_index
+    mdf "site/documentation/configuring.md"
     str

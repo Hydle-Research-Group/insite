@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>Configuring</title><link rel="stylesheet" href="/insite/style.css"><link rel="icon" type="image/x-icon" href="/insite/icon.svg"></head><body><main><div style="display: flex;flex-direction: row;align-items: flex-start;justify-content: flex-start;width: 100%;box-sizing: border-box;"><div style="display: flex; flex-direction: column;"><p><a href="/insite"><img src="/insite/icon.svg" width="100px"/></a></p></div><div style="flex-grow: 1;"></div><div style="display: flex; flex-direction: column;"><p><a href="/insite">Home</a> | <a href="/insite/docs">Documentation</a></p></div></div><div style="display: flex;flex-direction: row;align-items: flex-start;justify-content: flex-start;width: 100%;box-sizing: border-box;"><div style="display: flex;flex-direction: column;align-items: flex-start;justify-content: flex-start;width: 100%;box-sizing: border-box;"><div style="display: flex; flex-direction: column;"><h4>Contents</h4></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/install">Install</a></p></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/creating">Creating</a></p></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/configuring">Configuring</a></p></div></div><div style="display: flex; flex-direction: column;"><h2>Configuring Sites</h2>
+<p>The way a site is built depends on the configuration defined in <code>insite.toml</code>. <code>insite.toml</code> can specify build information, asset bundling, and compiler flags.</p>
+<h2><code>build</code></h2>
+<p><code>build</code> configures a site's build settings.</p>
+<pre><code class="language-toml">[build]
+# build attributes here...
+</code></pre>
+<h3>Attributes</h3>
+<h4><code>name</code> <em>string, default: &quot;&quot;</em></h4>
+<p>The name of the site.</p>
+<pre><code class="language-toml">[build]
+name = &quot;my-site&quot;
+</code></pre>
+<h4><code>output</code> <em>string, default: &quot;output&quot;</em></h4>
+<p>The output directory of the site. <strong>WARNING: This directory is cleared every time the site is compiled (if <code>purge</code> is enabled)</strong></p>
+<pre><code class="language-toml">[build]
+output = &quot;docs&quot;
+</code></pre>
+<h4><code>purge</code> <em>bool, default: true</em></h4>
+<p>If the output directory should be purged on compilations.</p>
+<pre><code class="language-toml">[build]
+purge = false
+</code></pre>
+<h2><code>resources</code></h2>
+<p><code>resources</code> configures a site's resources.</p>
+<pre><code class="language-toml">[resources]
+# resource attributes here...
+</code></pre>
+<h3>Attributes</h3>
+<h4><code>favicon</code> <em>string, default: &quot;&quot;</em></h4>
+<p>Path to the site's favicon file. <em>The favicon is bundled with the site by the compiler.</em></p>
+<pre><code class="language-toml">[resources]
+favicon = &quot;path/to/my/favicon.png&quot;
+</code></pre>
+<h4><code>stylesheet</code> <em>string, default: &quot;&quot;</em></h4>
+<p>Path to the site's CSS stylesheet file. <em>The stylesheet is bundled with the site by the compiler.</em></p>
+<pre><code class="language-toml">[resources]
+stylesheet = &quot;path/to/my/stylesheet.css&quot;
+</code></pre>
+<h4><code>assets</code> <em>array, default: []</em></h4>
+<p>An array of files to bundle with the site. <em>The files are placed in the root directory (<code>/</code>) of the site.</em></p>
+<pre><code class="language-toml">[resources]
+assets = [&quot;path/to/an/icon.png&quot;, &quot;this/is/an/image.jpeg&quot;]
+</code></pre>
+<h2><code>compiler</code></h2>
+<p><code>compiler</code> configures the Insite compiler.</p>
+<pre><code class="language-toml">[compiler]
+# compiler attributes here...
+</code></pre>
+<h3>Attributes</h3>
+<h4><code>allow-markdown-html</code> <em>bool, default: false</em></h4>
+<p>Allow HTML inside of markdown content.</p>
+<pre><code class="language-toml">[compiler]
+allow-markdown-html = true
+</code></pre>
+<h4><code>allow-markdown-layout</code> <em>bool, default: false</em></h4>
+<p>Allow markdown content to follow the layout of parent elements, rather than creating it's own vertical layout (expected behaviour).</p>
+<pre><code class="language-toml">[compiler]
+allow-markdown-html = true
+</code></pre>
+<h4><code>allow-path-appending</code> <em>bool, default: false</em></h4>
+<p>Append the <code>build.name</code> attribute to assets like favicons and stylesheets. <em>For better GitHub pages compatibility, set this to <code>true</code></em></p>
+<pre><code class="language-toml">[compiler]
+allow-path-appending = true
+</code></pre>
+<h4><code>allow-gfm</code> <em>bool, default: true</em></h4>
+<p>Allow the use of <a href="https://github.github.com/gfm/">GitHub Flavored Markdown (GFM)</a>.</p>
+<pre><code class="language-toml">[compiler]
+allow-gfm = false
+</code></pre>
+</div></div></main></body></html>
