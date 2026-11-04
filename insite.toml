@@ -1,4 +1,5 @@
 [build]
+name = "insite"
 output = "docs"
 
 [resources]
@@ -8,3 +9,4 @@ assets = ["assets/icon.svg"]
 
 [compiler]
 allow-markdown-html = true
+allow-path-appending = true

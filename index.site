@@ -1,8 +1,8 @@
 .section nav_bar:
     ld horizontal, left
-    md "<a href=\"/\"><img src=\"/icon.svg\" width=\"100px\"/></a>"
+    md "<a href=\"/insite\"><img src=\"/insite/icon.svg\" width=\"100px\"/></a>"
     exp
-    md "[Home](/) | [About](/about) | [Documentation](/docs)"
+    md "[Home](/insite) | [About](/insite/about) | [Documentation](/insite/docs)"
     str
 
 .page "Home", "/":
@@ -11,7 +11,7 @@
     ld vertical, left
     md "## Build static sites <u>quick.</u>"
     md "Insite is an assembly-like language for building simple websites in minutes, not days."
-    md "<button onclick=\"window.location.href='/docs';\">Get Started</button>"
+    md "<button onclick=\"window.location.href='/insite/docs';\">Get Started</button>"
     exp
     str
     md "
