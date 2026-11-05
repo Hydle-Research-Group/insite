@@ -1,6 +1,6 @@
 .section nav_bar:
     ld horizontal, left
-    md "<a href=\"/insite\"><img src=\"/insite/icon.svg\" width=\"100px\"/></a>"
+    md "<a href=\"/insite\"><img src=\"/insite/icon-wide.svg\" width=\"100px\"/></a>"
     exp
     md "[Home](/insite) | [Documentation](/insite/docs)"
     str
@@ -15,8 +15,9 @@
 
 .page "Home", "/":
     jmp nav_bar
-    ld vertical, center
+    ld horizontal, center
     mdf "site/home.md"
+    md "<img src=\"/insite/icon.svg\" style=\"margin: 40px;\">"
     str
 
 .page "Documentation", "/docs/":
