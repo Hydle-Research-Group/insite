@@ -1,6 +1,6 @@
 ## Welcome
 
-This is the official documentation for [Insite](https://Hydle-Research-Group/insite), a static website programming language. 
+This is the official documentation for [Insite](https://github.com/Hydle-Research-Group/insite), a static website programming language. 
 
 The documentation is actively maintained by Hydle Research Group (HRG), and is updated according to changes or additions on Insite.
 
