@@ -188,7 +188,6 @@ impl Compiler {
                             "flex-direction: {};",
                             "align-items: {};",
                             "justify-content: {};",
-                            "width: 100%;",
                             "box-sizing: border-box;",
                             "\">"
                         ),
