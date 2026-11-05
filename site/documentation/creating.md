@@ -31,9 +31,9 @@ An `index.site` can contain multiple `page` definitions. `page` definitions are 
 .page "This is the title", "my/page/path":
 ```
 
-- `.page`: tells the compiler a page is being defined
-- `"This is the title"`: is the title of a page (string)
-- `"my/page/path"`: the path of the page
+- `.page` tells the compiler a page is being defined
+- `"This is the title"` is the title of a page (string)
+- `"my/page/path"` the path of the page
 
 *The page path isn't a filename, rather it is the physical URL path of the page. For example, the home page of a site would have a path of just `/`. To access it, the user would navigate to `https://www.mysite.com/`*
 

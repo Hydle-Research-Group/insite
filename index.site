@@ -24,6 +24,7 @@
     ld horizontal, left
     jmp docs_index
     mdf "site/documentation/docs.md"
+    exp
     str
 
 .page "Install", "/docs/install":
@@ -31,6 +32,7 @@
     ld horizontal, left
     jmp docs_index
     mdf "site/documentation/install.md"
+    exp
     str
 
 .page "Creating", "/docs/creating":
@@ -38,6 +40,7 @@
     ld horizontal, left
     jmp docs_index
     mdf "site/documentation/creating.md"
+    exp
     str
 
 .page "Configuring", "/docs/configuring":
@@ -45,4 +48,5 @@
     ld horizontal, left
     jmp docs_index
     mdf "site/documentation/configuring.md"
+    exp
     str

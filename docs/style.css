@@ -37,7 +37,7 @@ html {
 
 body {
     margin: 0;
-    padding: 35px;
+    padding: 25px;
 
     background-color: var(--bg);
     color: var(--text);
@@ -56,6 +56,11 @@ body {
 
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+}
+
+div {
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
 /* Headings */

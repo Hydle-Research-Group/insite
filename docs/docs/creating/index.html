@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>Creating</title><link rel="stylesheet" href="/insite/style.css"><link rel="icon" type="image/x-icon" href="/insite/icon.svg"></head><body><main><div style="display: flex;flex-direction: row;align-items: flex-start;justify-content: flex-start;width: 100%;box-sizing: border-box;"><div style="display: flex; flex-direction: column;"><p><a href="/insite"><img src="/insite/icon.svg" width="100px"/></a></p></div><div style="flex-grow: 1;"></div><div style="display: flex; flex-direction: column;"><p><a href="/insite">Home</a> | <a href="/insite/docs">Documentation</a></p></div></div><div style="display: flex;flex-direction: row;align-items: flex-start;justify-content: flex-start;width: 100%;box-sizing: border-box;"><div style="display: flex;flex-direction: column;align-items: flex-start;justify-content: flex-start;width: 100%;box-sizing: border-box;"><div style="display: flex; flex-direction: column;"><h4>Contents</h4></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/install">Install</a></p></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/creating">Creating</a></p></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/configuring">Configuring</a></p></div></div><div style="display: flex; flex-direction: column;"><h2>Creating Sites</h2>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>Creating</title><link rel="stylesheet" href="/insite/style.css"><link rel="icon" type="image/x-icon" href="/insite/icon.svg"></head><body><main><div style="display: flex;flex-direction: row;align-items: flex-start;justify-content: flex-start;box-sizing: border-box;"><div style="display: flex; flex-direction: column;"><p><a href="/insite"><img src="/insite/icon.svg" width="100px"/></a></p></div><div style="flex-grow: 1;"></div><div style="display: flex; flex-direction: column;"><p><a href="/insite">Home</a> | <a href="/insite/docs">Documentation</a></p></div></div><div style="display: flex;flex-direction: row;align-items: flex-start;justify-content: flex-start;box-sizing: border-box;"><div style="display: flex;flex-direction: column;align-items: flex-start;justify-content: flex-start;box-sizing: border-box;"><div style="display: flex; flex-direction: column;"><h4>Contents</h4></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/install">Install</a></p></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/creating">Creating</a></p></div><div style="display: flex; flex-direction: column;"><p><a href="/insite/docs/configuring">Configuring</a></p></div></div><div style="display: flex; flex-direction: column;"><h2>Creating Sites</h2>
 <p>You need to create an <code>index.site</code> and <code>insite.toml</code> file to begin compiling sites. Inside <code>insite.toml</code>, add the following:</p>
 <pre><code class="language-toml">[build]
 output = &quot;my/output/directory/&quot; # path to your output directory
@@ -19,9 +19,9 @@ jmp my_routine
 <pre><code class="language-asm">.page &quot;This is the title&quot;, &quot;my/page/path&quot;:
 </code></pre>
 <ul>
-<li><code>.page</code>: tells the compiler a page is being defined</li>
-<li><code>&quot;This is the title&quot;</code>: is the title of a page (string)</li>
-<li><code>&quot;my/page/path&quot;</code>: the path of the page</li>
+<li><code>.page</code> tells the compiler a page is being defined</li>
+<li><code>&quot;This is the title&quot;</code> is the title of a page (string)</li>
+<li><code>&quot;my/page/path&quot;</code> the path of the page</li>
 </ul>
 <p><em>The page path isn't a filename, rather it is the physical URL path of the page. For example, the home page of a site would have a path of just <code>/</code>. To access it, the user would navigate to <code>https://www.mysite.com/</code></em></p>
 <h3>Sections</h3>
@@ -65,4 +65,4 @@ jmp my_routine
     str
 </code></pre>
 <p><code>exp</code> tells the compiler to expand a layout's area with blank space, stretching across the available width or height.</p>
-</div></div></main></body></html>
+</div><div style="flex-grow: 1;"></div></div></main></body></html>
