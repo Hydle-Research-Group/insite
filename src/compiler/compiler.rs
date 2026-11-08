@@ -84,28 +84,34 @@ impl Compiler {
     ///
     /// This function will `Err` if the any `Command` inside of `commands` was unable to be read correctly.
     pub fn build(&mut self, commands: Vec<Command>) -> Result<(), Error> {
-        if self.config.purge && self.config.output.exists() {
+        let output_dir = if self.dev_mode {
+            self.config.output.join("dev")
+        } else {
+            self.config.output.join("build")
+        };
+
+        if self.config.purge && output_dir.exists() {
             // clear the output directory
-            fs::remove_dir_all(&self.config.output)?;
+            fs::remove_dir_all(&output_dir)?;
         }
 
         // create the output directory
-        fs::create_dir(&self.config.output)?;
+        fs::create_dir_all(&output_dir)?;
 
         if let Some(s) = &self.config.stylesheet
-            && let Err(_) = fs::copy(&s, &self.config.output.join("style.css"))
+            && let Err(_) = fs::copy(&s, &output_dir.join("style.css"))
         {
             println!("insite: unable to bundle stylesheet '{}'", s.display());
         }
 
         if let Some(f) = &self.config.favicon
-            && let Err(_) = fs::copy(&f, &self.config.output.join(f.file_name().unwrap()))
+            && let Err(_) = fs::copy(&f, &output_dir.join(f.file_name().unwrap()))
         {
             println!("insite: unable to bundle favicon '{}'", f.display());
         }
 
         for f in &self.config.assets {
-            if let Err(_) = fs::copy(&f, &self.config.output.join(&f.file_name().unwrap())) {
+            if let Err(_) = fs::copy(&f, &output_dir.join(&f.file_name().unwrap())) {
                 println!("insite: unable to bundle asset '{}'", f.display());
             }
         }
@@ -120,7 +126,7 @@ impl Compiler {
                 continue;
             };
 
-            let path = self.config.output.join(relative_path);
+            let path = output_dir.join(relative_path);
 
             if let Some(parent) = path.parent()
                 && let Err(_) = fs::create_dir_all(parent)

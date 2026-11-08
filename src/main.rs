@@ -92,7 +92,7 @@ async fn dev(filename: &PathBuf, config_file: &PathBuf, config: &BuildConfig) ->
 
     let c = config.clone();
     tokio::spawn(async move {
-        if let Err(e) = start_server(&c.output, server_tx).await {
+        if let Err(e) = start_server(&c.output.join("dev"), server_tx).await {
             println!("insite: server error\n{e}");
         }
     });
