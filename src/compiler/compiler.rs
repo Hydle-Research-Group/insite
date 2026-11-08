@@ -90,7 +90,7 @@ impl Compiler {
             self.config.output.join("build")
         };
 
-        if self.config.purge && output_dir.exists() {
+        if output_dir.exists() {
             // clear the output directory
             fs::remove_dir_all(&output_dir)?;
         }

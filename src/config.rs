@@ -7,7 +7,6 @@ use toml::Value;
 pub struct BuildConfig {
     pub name: String,
     pub output: PathBuf,
-    pub purge: bool,
     pub favicon: Option<PathBuf>,
     pub stylesheet: Option<PathBuf>,
     pub assets: Vec<PathBuf>,
@@ -41,10 +40,6 @@ impl BuildConfig {
 
             if let Some(output) = build.get("output").and_then(Value::as_str) {
                 config.output = PathBuf::from(output);
-            }
-
-            if let Some(purge) = build.get("purge").and_then(Value::as_bool) {
-                config.purge = purge;
             }
         };
 
@@ -112,7 +107,6 @@ impl Default for BuildConfig {
         Self {
             name: String::new(),
             output: PathBuf::from("output"),
-            purge: true,
             favicon: None,
             stylesheet: None,
             assets: Vec::new(),
