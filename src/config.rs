@@ -7,6 +7,7 @@ use toml::Value;
 pub struct BuildConfig {
     pub name: String,
     pub output: PathBuf,
+    pub create_gitignore: bool,
     pub favicon: Option<PathBuf>,
     pub stylesheet: Option<PathBuf>,
     pub assets: Vec<PathBuf>,
@@ -40,6 +41,10 @@ impl BuildConfig {
 
             if let Some(output) = build.get("output").and_then(Value::as_str) {
                 config.output = PathBuf::from(output);
+            }
+
+            if let Some(create_gitignore) = build.get("create-gitignore").and_then(Value::as_bool) {
+                config.create_gitignore = create_gitignore;
             }
         };
 
@@ -107,6 +112,7 @@ impl Default for BuildConfig {
         Self {
             name: String::new(),
             output: PathBuf::from("output"),
+            create_gitignore: true,
             favicon: None,
             stylesheet: None,
             assets: Vec::new(),

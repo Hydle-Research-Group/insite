@@ -65,6 +65,29 @@ async fn main() {
 ///
 /// This function will additionally write encountered errors to standard output.
 fn build(filename: &PathBuf, config: &BuildConfig, dev_mode: bool) -> Result<(), Error> {
+    // add build.output to '.gitignore' file if enabled
+    if config.create_gitignore {
+        let gitignore = PathBuf::from(".gitignore");
+        let attr = format!("/{}", config.output.display());
+
+        if gitignore.exists() {
+            let contents = fs::read_to_string(&gitignore)?;
+            let lines = contents.lines().collect::<Vec<&str>>();
+
+            let mut modified = lines.clone();
+
+            for line in &lines {
+                if !line.contains(&attr) {
+                    modified.push(&attr);
+                }
+            }
+
+            fs::write(&gitignore, modified.join("\n").to_string())?;
+        } else {
+            fs::write(&gitignore, attr)?;
+        }
+    }
+
     let contents = fs::read_to_string(&filename)?;
 
     let mut lexer = Lexer::new(&filename, &contents);
