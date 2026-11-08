@@ -12,14 +12,14 @@
 name = &quot;my-site&quot;
 </code></pre>
 <h4><code>output</code> <em>string, default: &quot;output&quot;</em></h4>
-<p>The output directory of the site. <strong>WARNING: This directory is cleared every time the site is compiled (if <code>purge</code> is enabled)</strong></p>
+<p>The output directory of the site.</p>
 <pre><code class="language-toml">[build]
 output = &quot;docs&quot;
 </code></pre>
-<h4><code>purge</code> <em>bool, default: true</em></h4>
-<p>If the output directory should be purged on compilations.</p>
+<h4><code>create-gitignore</code> <em>bool, default: true</em></h4>
+<p>Create a <code>.gitignore</code> file and add <code>build.output</code> to it.</p>
 <pre><code class="language-toml">[build]
-purge = false
+create-gitignore = false
 </code></pre>
 <h2><code>resources</code></h2>
 <p><code>resources</code> configures a site's resources.</p>

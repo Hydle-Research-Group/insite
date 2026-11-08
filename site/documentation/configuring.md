@@ -24,20 +24,20 @@ name = "my-site"
 
 #### `output` *string, default: "output"*
 
-The output directory of the site. **WARNING: This directory is cleared every time the site is compiled (if `purge` is enabled)**
+The output directory of the site.
 
 ```toml
 [build]
 output = "docs"
 ```
 
-#### `purge` *bool, default: true*
+#### `create-gitignore` *bool, default: true*
 
-If the output directory should be purged on compilations.
+Create a `.gitignore` file and add `build.output` to it.
 
 ```toml
 [build]
-purge = false
+create-gitignore = false
 ```
 
 ## `resources`

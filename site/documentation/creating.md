@@ -98,3 +98,18 @@ Layouts can also be stretched or "spread out" with `exp`.
 ```
 
 `exp` tells the compiler to expand a layout's area with blank space, stretching across the available width or height.
+
+### Site Build Structure
+
+The Insite compiler will build a site in the following directory structure:
+
+```
+.
+└── <output>/
+    ├── build # the site build 
+    └── dev   # the site dev directory
+```
+
+`<output>` is the output path of the site. This can be configured in `insite.toml`, instructions [here](/insite/docs/configuring). By default, `<output>` is added to a `.gitignore` file as it should never be committed to Git or other version control systems. 
+
+`build` is the site's "release" build, where all content and HTML is optimized for a production release. `dev` is used during web server (developer) mode.

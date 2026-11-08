@@ -1,6 +1,5 @@
 [build]
 name = "insite"
-output = "docs"
 
 [resources]
 favicon = "assets/icon.svg"

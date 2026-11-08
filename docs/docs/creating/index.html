@@ -65,4 +65,13 @@ jmp my_routine
     str
 </code></pre>
 <p><code>exp</code> tells the compiler to expand a layout's area with blank space, stretching across the available width or height.</p>
+<h3>Site Build Structure</h3>
+<p>The Insite compiler will build a site in the following directory structure:</p>
+<pre><code>.
+└── &lt;output&gt;/
+    ├── build # the site build 
+    └── dev   # the site dev directory
+</code></pre>
+<p><code>&lt;output&gt;</code> is the output path of the site. This can be configured in <code>insite.toml</code>, instructions <a href="/insite/docs/configuring">here</a>. By default, <code>&lt;output&gt;</code> is added to a <code>.gitignore</code> file as it should never be committed to Git or other version control systems.</p>
+<p><code>build</code> is the site's &quot;release&quot; build, where all content and HTML is optimized for a production release. <code>dev</code> is used during web server (developer) mode.</p>
 </div><div style="flex-grow: 1;"></div></div></main></body></html>
