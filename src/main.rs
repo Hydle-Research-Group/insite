@@ -76,10 +76,8 @@ fn build(filename: &PathBuf, config: &BuildConfig, dev_mode: bool) -> Result<(),
 
             let mut modified = lines.clone();
 
-            for line in &lines {
-                if !line.contains(&attr) {
-                    modified.push(&attr);
-                }
+            if !lines.contains(&attr.as_str()) {
+                modified.push(&attr);
             }
 
             fs::write(&gitignore, modified.join("\n").to_string())?;
